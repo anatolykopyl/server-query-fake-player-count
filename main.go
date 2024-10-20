@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"log"
-	"math"
 	"math/rand/v2"
 	"net"
+	"sort"
 	"time"
 )
 
@@ -160,16 +159,25 @@ func modifyPlayerResponse(response []byte) []byte {
 
 	modifiedResponse[playersOffset] = modifiedPlayerCount
 
+	var durations = []float32{}
 	for i := byte(0); i < turnUp; i++ {
 		randomFloat := float32(rand.Float64()) * 10000
+		durations = append(durations, randomFloat)
+	}
 
-		duration := make([]byte, 4)
-		binary.LittleEndian.PutUint32(duration, math.Float32bits(randomFloat))
+	sort.Slice(durations, func(i, j int) bool {
+		return i > j
+	})
+
+	for i := byte(0); i < turnUp; i++ {
+		// duration := make([]byte, 4)
+		// binary.LittleEndian.PutUint32(duration, math.Float32bits(durations[i]))
 
 		var (
-			index = []byte{0x00}
-			name  = []byte{0x00}
-			score = []byte{0x00, 0x00, 0x00, 0x00}
+			index    = []byte{0x00}
+			name     = []byte{0x00}
+			score    = []byte{0x00, 0x00, 0x00, 0x00}
+			duration = []byte{0x00, 0x00, 0x00, 0x01}
 		)
 
 		modifiedResponse = append(modifiedResponse, index...)
