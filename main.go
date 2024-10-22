@@ -1,18 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math/rand/v2"
 	"net"
 	"sort"
-	"time"
 )
 
-const (
-	originalServerAddr = "localhost:27015"
-	proxyPort          = ":27016"
-)
+var originalServerAddr, proxyPort string
+var turnUp int
 
 const (
 	A2S_INFO   = 0x54
@@ -28,6 +26,12 @@ const (
 )
 
 func main() {
+	flag.StringVar(&originalServerAddr, "address", "localhost:27015", "the address of the original server")
+	flag.StringVar(&proxyPort, "port", ":27016", "what port to use as a proxy")
+	flag.IntVar(&turnUp, "amount", 10, "how many players to add")
+
+	flag.Parse()
+
 	addr, err := net.ResolveUDPAddr("udp", proxyPort)
 	if err != nil {
 		log.Fatal(err)
@@ -123,9 +127,7 @@ func modifyInfoResponse(response []byte) []byte {
 	originalPlayerCount := response[playersOffset]
 	maxPlayers := response[playersOffset+byteLength]
 
-	turnUp := byte(getValueBasedOnTime())
-
-	modifiedPlayerCount := originalPlayerCount + turnUp
+	modifiedPlayerCount := originalPlayerCount + byte(turnUp)
 	if modifiedPlayerCount > maxPlayers {
 		modifiedPlayerCount = maxPlayers
 	}
@@ -149,10 +151,8 @@ func modifyPlayerResponse(response []byte) []byte {
 		return response
 	}
 
-	turnUp := byte(getValueBasedOnTime())
-
 	originalPlayerCount := response[playersOffset]
-	modifiedPlayerCount := originalPlayerCount + turnUp
+	modifiedPlayerCount := originalPlayerCount + byte(turnUp)
 
 	modifiedResponse := make([]byte, len(response))
 	copy(modifiedResponse, response)
@@ -160,7 +160,7 @@ func modifyPlayerResponse(response []byte) []byte {
 	modifiedResponse[playersOffset] = modifiedPlayerCount
 
 	var durations = []float32{}
-	for i := byte(0); i < turnUp; i++ {
+	for i := byte(0); i < byte(turnUp); i++ {
 		randomFloat := float32(rand.Float64()) * 10000
 		durations = append(durations, randomFloat)
 	}
@@ -169,10 +169,7 @@ func modifyPlayerResponse(response []byte) []byte {
 		return i > j
 	})
 
-	for i := byte(0); i < turnUp; i++ {
-		// duration := make([]byte, 4)
-		// binary.LittleEndian.PutUint32(duration, math.Float32bits(durations[i]))
-
+	for i := byte(0); i < byte(turnUp); i++ {
 		var (
 			index    = []byte{0x00}
 			name     = []byte{0x00}
@@ -197,23 +194,5 @@ func maxStringLength(data []byte) int {
 	for length < len(data) && data[length] != 0x00 {
 		length++
 	}
-	return length + 1 // Include null terminator
-}
-
-// GetValueBasedOnTime returns an integer between 0 and 20 based on current time.
-// The maximum value (20) corresponds to 20:00.
-func getValueBasedOnTime() int {
-	now := time.Now()
-
-	totalMinutes := now.Hour()*60 + now.Minute()
-
-	maxMinutes := 20 * 60
-	if totalMinutes < 0 {
-		return 0
-	}
-	if totalMinutes >= maxMinutes {
-		return 20
-	}
-
-	return int(float64(totalMinutes) / float64(maxMinutes) * 20)
+	return length + 1
 }
