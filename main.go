@@ -11,6 +11,7 @@ import (
 
 var originalServerAddr, proxyPort string
 var turnUp int
+var verbose bool
 
 const (
 	A2S_INFO   = 0x54
@@ -26,9 +27,10 @@ const (
 )
 
 func main() {
-	flag.StringVar(&originalServerAddr, "address", "localhost:27015", "the address of the original server")
-	flag.StringVar(&proxyPort, "port", ":27016", "what port to use as a proxy")
+	flag.StringVar(&originalServerAddr, "address", "localhost:27016", "the address of the original server")
+	flag.StringVar(&proxyPort, "port", ":27017", "what port to use as a proxy")
 	flag.IntVar(&turnUp, "amount", 10, "how many players to add")
+	flag.BoolVar(&verbose, "verbose", false, "verbose logging")
 
 	flag.Parse()
 
@@ -58,6 +60,10 @@ func main() {
 }
 
 func handleRequest(conn *net.UDPConn, request []byte, clientAddr *net.UDPAddr) {
+	if verbose {
+		log.Println(request)
+	}
+
 	if len(request) < 5 {
 		return
 	}
@@ -146,7 +152,6 @@ func modifyPlayerResponse(response []byte) []byte {
 		playersOffset = headerOffset + byteLength
 	)
 
-	log.Println(response)
 	if response[headerOffset] == 0x41 {
 		return response
 	}
@@ -182,8 +187,6 @@ func modifyPlayerResponse(response []byte) []byte {
 		modifiedResponse = append(modifiedResponse, score...)
 		modifiedResponse = append(modifiedResponse, duration...)
 	}
-
-	log.Println(modifiedResponse)
 
 	return modifiedResponse
 }
