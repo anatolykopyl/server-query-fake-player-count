@@ -1,5 +1,5 @@
 # Variables
-APP_NAME = player-count-turn-up
+APP_NAME = faker
 GOOS = linux
 GOARCH = amd64
 CGO_ENABLED = 0
