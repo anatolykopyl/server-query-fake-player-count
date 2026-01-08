@@ -61,7 +61,7 @@ func main() {
 
 func handleRequest(conn *net.UDPConn, request []byte, clientAddr *net.UDPAddr) {
 	if verbose {
-		log.Println(request)
+		log.Println("Request:", request)
 	}
 
 	if len(request) < 5 {
@@ -74,6 +74,10 @@ func handleRequest(conn *net.UDPConn, request []byte, clientAddr *net.UDPAddr) {
 	if err != nil {
 		log.Println("Error forwarding to original server:", err)
 		return
+	}
+
+	if verbose {
+		log.Println("Response:", response)
 	}
 
 	switch queryType {
