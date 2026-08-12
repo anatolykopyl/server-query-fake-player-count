@@ -1,0 +1,29 @@
+services:
+  # Replace or extend this service with your existing game server definition.
+  # Its Steam query port must be QUERY_PORT and must not be published to the host.
+  game-server:
+    image: "${GAME_SERVER_IMAGE:?Set GAME_SERVER_IMAGE to your game server image}"
+    expose:
+      - "${QUERY_PORT:-27016}/udp"
+    networks:
+      - server-query
+
+  faker:
+    build:
+      context: ..
+    command:
+      - "-address=game-server:${QUERY_PORT:-27016}"
+      - "-port=:${QUERY_PORT:-27016}"
+      - "-amount=${FAKE_PLAYER_COUNT:-10}"
+    ports:
+      - target: ${QUERY_PORT:-27016}
+        published: "${QUERY_PORT:-27016}"
+        protocol: udp
+    depends_on:
+      - game-server
+    networks:
+      - server-query
+    restart: unless-stopped
+
+networks:
+  server-query:
