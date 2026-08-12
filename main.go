@@ -28,7 +28,7 @@ const (
 
 func main() {
 	flag.StringVar(&originalServerAddr, "address", "localhost:27016", "the address of the original server")
-	flag.StringVar(&proxyPort, "port", ":27017", "what port to use as a proxy")
+	flag.StringVar(&proxyPort, "port", ":27017", "UDP address to listen on")
 	flag.IntVar(&turnUp, "amount", 10, "how many players to add")
 	flag.BoolVar(&verbose, "verbose", false, "verbose logging")
 
